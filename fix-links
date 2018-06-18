@@ -1,0 +1,17 @@
+#!/bin/bash
+
+update-alternatives --install `which gcc` gcc `which gcc-8` 50
+update-alternatives --install `which gcc|xargs dirname`/g++ g++ `which g++-8` 50
+
+# Fix cross compilers
+for f in `ls -1 /usr/bin/arm-linux-gnueabi-*-8` ; do
+    t=`echo $f|sed 's#-8##g'`
+
+    # Ensure the target is not present
+    if [ -f $t ] ; then
+        exit -1
+    fi
+
+    n=`basename $t`
+    update-alternatives --install $t $n $f 50
+done
