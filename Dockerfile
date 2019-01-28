@@ -6,11 +6,8 @@ ENV GOPATH /home/tinker/go
 RUN apt-get update --no-install-recommends -y && \
         apt-get install --no-install-recommends -y apt-utils && \
         apt-get upgrade -y && \
-        apt-get install -y sudo openssl vim git global make gcc-8 g++-8 gcc-8-arm-linux-gnueabi golang gdb strace abootimg \
-        curl redis man-db manpages-dev libc-dev libuv-dev libev-dev
-
-COPY fix-links /tmp/fix-links
-RUN /tmp/fix-links
+        apt-get install -y sudo openssl vim git global make gcc g++ golang gdb strace \
+        curl redis man-db manpages-dev libc-dev libc6-dev libev-dev
 
 RUN useradd tinker -G sudo -m -p `echo tinker | openssl passwd -crypt -stdin`
 
