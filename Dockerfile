@@ -4,7 +4,7 @@ ARG HOME
 ARG USER
 
 RUN swupd bundle-add man-pages sysadmin-basic os-core-search \
-	    git make editors dev-utils performance-tools \
+	    git make editors dev-utils performance-tools the_silver_searcher \
 	    c-basic go-basic rust-basic
 
 RUN groupadd -r sudo
