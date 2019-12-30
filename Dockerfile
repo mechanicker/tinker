@@ -1,19 +1,20 @@
 FROM clearlinux:latest
 
+ARG HOME
+ARG USER
+
 RUN swupd bundle-add man-pages sysadmin-basic os-core-search \
 	    git make editors dev-utils performance-tools \
 	    c-basic go-basic rust-basic
 
 RUN groupadd -r sudo
-RUN mkdir -p /etc/sudoers.d
+RUN groupadd -g 20 staff
+RUN mkdir -p /etc/sudoers.d /Users
 RUN echo "%sudo	ALL=(ALL:ALL) ALL" >> /etc/sudoers.d/visudo
 
-RUN useradd tinker -G sudo -m -p `echo tinker | openssl passwd -crypt -stdin`
-USER tinker
+RUN useradd -N -G sudo,staff -g staff -M -d $HOME -p `echo nopass | openssl passwd -crypt -stdin` -o -u 501 $USER
+USER $USER
 
-COPY --chown=tinker bashrc /home/tinker/.bashrc
+COPY bashrc /etc/bashrc.default
 
-RUN mkdir -p /home/tinker/go
-ENV GOPATH /home/tinker/go
-
-WORKDIR /home/tinker
+WORKDIR $HOME
