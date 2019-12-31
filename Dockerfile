@@ -10,7 +10,6 @@ RUN groupadd -g 20 staff
 RUN mkdir -p /etc/sudoers.d
 RUN echo "%sudo	ALL=(ALL:ALL) ALL" >> /etc/sudoers.d/visudo
 RUN useradd -N -G sudo,staff -g staff -M -d $HOME -p `echo nopass | openssl passwd -crypt -stdin` -o -u 501 $USER
-COPY --chown=$USER:staff bashrc /etc/bashrc.default
 
 # Update and install common packages
 RUN swupd update
@@ -29,3 +28,13 @@ RUN swupd clean
 
 USER $USER
 WORKDIR $HOME
+
+# Customize bash
+COPY --chown=$USER:staff bashrc /etc/bashrc.default
+
+# Create a folder to store emacs server file
+RUN mkdir -m 700 /tmp/local
+ENV EPHEMERAL=/tmp/local
+
+# Start emacs in daemon mode for quick editing
+ENTRYPOINT emacs --daemon > /dev/null 2>&1 && /bin/bash
