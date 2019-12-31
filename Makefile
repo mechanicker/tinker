@@ -6,11 +6,11 @@ HOME := $(shell realpath ~)
 all: refresh build
 
 refresh:
-	@find linux.latest -mtime +7 -exec rm -f {} +
+	@if [ -f linux.latest ] ; then find linux.latest -mtime +7 -exec rm -f {} + ; fi
 
 build: linux.latest
 
-linux.latest: SOURCE=$(subst from ,,$(shell grep -E "^FROM" Dockerfile|tr 'A-Z' 'a-z'))
+linux.latest: SOURCE=$(word 2, $(shell grep -m 1 -E "^FROM" Dockerfile))
 linux.latest: bashrc Makefile Dockerfile
 	@echo Building linux based on ${SOURCE}
 	@docker pull ${SOURCE}
