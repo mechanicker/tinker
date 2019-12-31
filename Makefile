@@ -3,7 +3,12 @@
 USER := $(shell whoami)
 HOME := $(shell realpath ~)
 
-all: linux.latest
+all: refresh build
+
+refresh:
+	@find linux.latest -mtime +7 -exec rm -f {} +
+
+build: linux.latest
 
 linux.latest: SOURCE=$(subst from ,,$(shell grep -E "^FROM" Dockerfile|tr 'A-Z' 'a-z'))
 linux.latest: bashrc Makefile Dockerfile
@@ -22,4 +27,4 @@ clean:
 	@rm -f linux.latest
 
 .PHONY:
-	clean
+	clean refresh

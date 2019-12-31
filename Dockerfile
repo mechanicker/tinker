@@ -3,6 +3,7 @@ FROM clearlinux:latest
 ARG HOME
 ARG USER
 
+RUN swupd update
 RUN swupd bundle-add man-pages sysadmin-basic os-core-search \
 	    git make editors dev-utils performance-tools the_silver_searcher \
 	    c-basic go-basic rust-basic
