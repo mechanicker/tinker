@@ -10,11 +10,12 @@ refresh:
 
 build: linux.latest
 
+linux.latest: STAGE=$(word 2, $(subst ., , $@))
 linux.latest: SOURCE=$(word 2, $(shell grep -m 1 -E "^FROM" Dockerfile))
 linux.latest: bashrc Makefile Dockerfile
-	@echo Building linux based on ${SOURCE}
+	@echo Building linux stage ${STAGE} based on ${SOURCE}
 	@docker pull ${SOURCE}
-	@docker build -q --build-arg HOME=${HOME} --build-arg USER=${USER} --tag=linux:latest --rm .
+	@docker build -q --build-arg HOME=${HOME} --build-arg USER=${USER} --tag=linux:${STAGE} --rm=false .
 	@touch linux.latest
 
 run: linux.latest
