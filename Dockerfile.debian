@@ -1,0 +1,40 @@
+# vim:expandtab
+FROM debian:testing-slim as base
+
+ARG HOME
+ARG USER
+ARG PASSWD
+
+# Create user and add to required groups for sudo access
+RUN useradd -N -G sudo,staff -g staff -M -d $HOME -o -u 501 $USER
+RUN echo "${USER}:${PASSWD}" | chpasswd
+
+# Update and install common packages
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update --no-install-recommends -y && \
+        apt-get install --no-install-recommends -y apt-utils && \
+        apt-get upgrade -y && \
+        apt-get install -y sudo git make linux-perf vim emacs golang rustc clangd \
+        gdb strace silversearcher-ag man-db manpages-dev libc-dev libc6-dev libev-dev python3-venv
+
+FROM base as extras
+
+ARG HOME
+ARG USER
+
+# Git build requirements
+RUN apt-get install -y libssl-dev libz-dev libcurl4-openssl-dev libexpat-dev gettext
+
+# Customize bash
+COPY --chown=$USER:staff bashrc /etc/bashrc.default
+
+USER $USER
+
+# Create a folder to store emacs server file
+RUN mkdir -m 700 /tmp/local
+ENV EPHEMERAL=/tmp/local
+
+# Start emacs in daemon mode for quick editing
+ENTRYPOINT emacs --daemon > /dev/null 2>&1 && /bin/bash
+WORKDIR $HOME

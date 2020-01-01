@@ -1,9 +1,17 @@
 # Build a linux docker image
 
 USER := $(shell whoami)
+PASSWD ?= "nopass"
 HOME := $(shell realpath ~)
+FLAVOR := Dockerfile.debian
 
 all: refresh build
+
+debian: FLAVOR=Dockerfile.debian
+debian: all
+
+clearlinux: FLAVOR=Dockerfile.clearlinux
+clearlinux: all
 
 refresh:
 	@if [ -f linux.latest ] ; then find linux.latest -mtime +7 -exec rm -f {} + ; fi
@@ -11,11 +19,11 @@ refresh:
 build: linux.latest
 
 linux.latest: STAGE=$(word 2, $(subst ., , $@))
-linux.latest: SOURCE=$(word 2, $(shell grep -m 1 -E "^FROM" Dockerfile))
-linux.latest: bashrc Makefile Dockerfile
+linux.latest: SOURCE=$(word 2, $(shell grep -m 1 -E "^FROM" ${FLAVOR}))
+linux.latest: bashrc Makefile ${FLAVOR}
 	@echo Building linux stage ${STAGE} based on ${SOURCE}
 	@docker pull ${SOURCE}
-	@docker build -q --build-arg HOME=${HOME} --build-arg USER=${USER} --tag=linux:${STAGE} --rm=false .
+	@docker build -q -f ${FLAVOR} --build-arg HOME=${HOME} --build-arg USER=${USER} --build-arg PASSWD=${PASSWD} --tag=linux:${STAGE} --rm=false .
 	@touch linux.latest
 
 run: linux.latest
