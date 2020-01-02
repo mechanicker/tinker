@@ -9,6 +9,7 @@ alias rg='ag -S -f'
 alias cls=clear
 alias cdgo='pushd ${GOPATH:-"."}'
 alias em="emacsclient -q -a emacs -t -f ${EPHEMERAL}/server/emacs.server"
+alias venv='python3 -m venv'
 
 # FIXME: Figure out how to set unlimited core files size
 ulimit -c 0

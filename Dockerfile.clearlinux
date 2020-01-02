@@ -40,5 +40,9 @@ RUN mkdir -m 700 /tmp/local
 ENV EPHEMERAL=/tmp/local
 
 # Start emacs in daemon mode for quick editing
-ENTRYPOINT emacs --daemon > /dev/null 2>&1 && /bin/bash
+# RUN echo #!/bin/bash > ${EPHEMERAL}/.entrypoint
+RUN echo nohup emacs --daemon \& > ${EPHEMERAL}/.entrypoint
+RUN chmod +x ${EPHEMERAL}/.entrypoint
+ENTRYPOINT ${EPHEMERAL}/.entrypoint > /dev/null 2>&1 && /bin/bash
+
 WORKDIR $HOME

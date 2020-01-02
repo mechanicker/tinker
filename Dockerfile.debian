@@ -16,8 +16,10 @@ RUN apt-get update --no-install-recommends -y && \
         apt-get install --no-install-recommends -y apt-utils && \
         apt-get upgrade -y && \
         apt-get install -y sudo git make linux-perf vim emacs golang rustc clangd \
-        gdb strace silversearcher-ag man-db manpages-dev libc-dev libc6-dev libev-dev python3-venv
+        gdb strace silversearcher-ag man-db manpages-dev libc-dev libc6-dev libev-dev \
+        python3-dev python3-venv
 
+# Add any development specific additional packages
 FROM base as extras
 
 ARG HOME
@@ -25,6 +27,16 @@ ARG USER
 
 # Git build requirements
 RUN apt-get install -y libssl-dev libz-dev libcurl4-openssl-dev libexpat-dev gettext
+
+# Install pip for adding additional Python packages
+RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+RUN python3 get-pip.py
+
+# The final phase mostly has user runtime environment configurations
+FROM extras as final
+
+ARG HOME
+ARG USER
 
 # Customize bash
 COPY --chown=$USER:staff bashrc /etc/bashrc.default
@@ -36,5 +48,9 @@ RUN mkdir -m 700 /tmp/local
 ENV EPHEMERAL=/tmp/local
 
 # Start emacs in daemon mode for quick editing
-ENTRYPOINT emacs --daemon > /dev/null 2>&1 && /bin/bash
+# RUN echo #!/bin/bash > ${EPHEMERAL}/.entrypoint
+RUN echo nohup emacs --daemon \& > ${EPHEMERAL}/.entrypoint
+RUN chmod +x ${EPHEMERAL}/.entrypoint
+ENTRYPOINT ${EPHEMERAL}/.entrypoint > /dev/null 2>&1 && /bin/bash
+
 WORKDIR $HOME
