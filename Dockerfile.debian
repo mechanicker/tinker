@@ -1,5 +1,5 @@
 # vim:expandtab
-FROM debian:testing-slim as base
+FROM debian:unstable as base
 
 ARG HOME
 ARG USER
