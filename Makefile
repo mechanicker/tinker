@@ -3,9 +3,12 @@
 USER := $(shell whoami)
 PASSWD ?= "nopass"
 HOME := $(shell realpath ~)
-FLAVOR := Dockerfile.debian
+FLAVOR := Dockerfile.centos
 
 all: refresh build
+
+centos: FLAVOR=Dockerfile.centos
+centos: all
 
 debian: FLAVOR=Dockerfile.debian
 debian: all

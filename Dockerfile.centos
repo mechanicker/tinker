@@ -1,0 +1,56 @@
+# vim:expandtab
+FROM docker.atl-paas.net/bitbucket/bitbucket-centos:latest as base
+
+ARG HOME
+ARG USER
+ARG PASSWD
+
+RUN yum --setopt=tsflags='' -y reinstall shadow-utils
+RUN yum -y install epel-release
+
+RUN yum -y install \
+        sudo perf file neovim python3-neovim emacs golang rustc clangd \
+        gdb strace silversearcher-ag man-pages man-db libc-dev libc6-dev libev-dev
+
+# Create user and add to required groups for sudo access
+RUN groupadd staff
+RUN useradd -N -G wheel,staff -g staff -M -d $HOME -o -u 501 $USER
+RUN echo "${USER}:${PASSWD}" | chpasswd
+
+# Add any development specific additional packages
+FROM base as extras
+
+ARG HOME
+ARG USER
+
+# For python
+RUN pip2 install virtualenv
+
+# Mucking with rpms
+RUN yum -y install rpm-build rpmrebuild
+
+# Git build requirements
+RUN yum -y install libssl-dev libz-dev libcurl4-openssl-dev libexpat-dev gettext
+
+# The final phase mostly has user runtime environment configurations
+FROM extras as final
+
+ARG HOME
+ARG USER
+
+# Customize bash
+COPY --chown=$USER:staff bashrc /etc/bashrc.default
+
+USER $USER
+
+# Create a folder to store emacs server file
+RUN mkdir -m 700 /tmp/local
+ENV EPHEMERAL=/tmp/local
+
+# Start emacs in daemon mode for quick editing
+# RUN echo #!/bin/bash > ${EPHEMERAL}/.entrypoint
+RUN echo nohup emacs --daemon \& > ${EPHEMERAL}/.entrypoint
+RUN chmod +x ${EPHEMERAL}/.entrypoint
+ENTRYPOINT ${EPHEMERAL}/.entrypoint > /dev/null 2>&1 && /bin/bash
+
+WORKDIR $HOME
