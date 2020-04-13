@@ -9,8 +9,10 @@ RUN yum --setopt=tsflags='' -y reinstall shadow-utils
 RUN yum -y install epel-release
 
 RUN yum -y install \
-        sudo perf file neovim python3-neovim emacs golang rustc clangd \
+        sudo perf file emacs golang rustc clangd \
         gdb strace silversearcher-ag man-pages man-db libc-dev libc6-dev libev-dev
+
+RUN yum -y remove cmake
 
 # Create user and add to required groups for sudo access
 RUN groupadd staff
@@ -31,6 +33,9 @@ RUN yum -y install rpm-build rpmrebuild
 
 # Git build requirements
 RUN yum -y install libssl-dev libz-dev libcurl4-openssl-dev libexpat-dev gettext
+
+RUN curl -sSL https://github.com/Kitware/CMake/releases/download/v3.17.1/cmake-3.17.1-Linux-x86_64.sh -o /tmp/cmake.sh
+RUN chmod 755 /tmp/cmake.sh && /tmp/cmake.sh --skip-license --prefix=/usr/local
 
 # The final phase mostly has user runtime environment configurations
 FROM extras as final

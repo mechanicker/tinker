@@ -10,6 +10,8 @@ alias cdgo='pushd ${GOPATH:-"."}'
 alias em="emacsclient -q -a emacs -t -f ${EPHEMERAL}/server/emacs.server"
 alias venv='python3 -m venv'
 
+PATH=${HOME}/installs/${OS}/bin:${PATH}
+
 # Check if we have neovim installed
 test nvim 1>/dev/null
 if [ $? -eq 0 ]; then
@@ -31,3 +33,4 @@ function perf_setup() {
 	return
     fi
 }
+
