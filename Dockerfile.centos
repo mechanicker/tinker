@@ -36,6 +36,7 @@ RUN yum -y install libssl-dev libz-dev libcurl4-openssl-dev libexpat-dev gettext
 
 RUN curl -sSL https://github.com/Kitware/CMake/releases/download/v3.17.1/cmake-3.17.1-Linux-x86_64.sh -o /tmp/cmake.sh
 RUN chmod 755 /tmp/cmake.sh && /tmp/cmake.sh --skip-license --prefix=/usr/local
+RUN curl -sSLO https://github.com/ninja-build/ninja/releases/download/v1.10.0/ninja-linux.zip && unzip ninja-linux.zip && cp ninja /usr/bin/. && chmod 755 /usr/bin/ninja && rm -f ninja-linux.zip
 
 # The final phase mostly has user runtime environment configurations
 FROM extras as final
