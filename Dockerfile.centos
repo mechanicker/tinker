@@ -1,5 +1,5 @@
 # vim:expandtab
-FROM docker.atl-paas.net/bitbucket/bitbucket-centos:latest as base
+FROM docker.atl-paas.net/sox/bitbucket/bitbucket-centos-golang:latest as base
 
 ARG HOME
 ARG USER
@@ -9,7 +9,7 @@ RUN yum --setopt=tsflags='' -y reinstall shadow-utils
 RUN yum -y install epel-release
 
 RUN yum -y install \
-        sudo perf file emacs golang rustc clangd \
+        sudo perf file emacs rustc clangd \
         gdb strace silversearcher-ag man-pages man-db libc-dev libc6-dev libev-dev
 
 RUN yum -y remove cmake
@@ -27,9 +27,6 @@ ARG USER
 
 # For python
 RUN pip2 install virtualenv
-
-# Mucking with rpms
-RUN yum -y install rpm-build rpmrebuild
 
 # Git build requirements
 RUN yum -y install libssl-dev libz-dev libcurl4-openssl-dev libexpat-dev gettext
