@@ -1,0 +1,73 @@
+# vim:expandtab
+FROM rockylinux/rockylinux:8 as base
+
+ARG HOME
+ARG SHELL=/usr/bin/zsh
+ARG USER
+ARG PASSWD
+
+ENV SHELL=$SHELL
+
+RUN yum --setopt=tsflags='' -y reinstall shadow-utils
+RUN yum -y install epel-release
+
+RUN yum -y group install 'Development Tools'
+RUN yum -y install \
+        sudo zsh perf file emacs python2 rustc cargo \
+        gdb strace man-pages man-db cmake
+
+COPY bb-artifactory.repo /etc/yum.repos.d/artifactory.repo
+
+# Create user and add to required groups for sudo access
+RUN groupadd staff
+RUN useradd -N -G wheel,staff -g staff -M -d $HOME -s $SHELL -o -u 501 $USER
+RUN echo "${USER}:${PASSWD}" | chpasswd
+
+# Add any development specific additional packages
+FROM base as extras
+
+ARG HOME
+ARG USER
+
+# For python
+RUN pip2 install virtualenv
+
+# Install Go
+RUN curl -sSL https://golang.org/dl/go1.16.7.linux-amd64.tar.gz -o /tmp/go.tgz && tar -C / -xf /tmp/go.tgz && rm -f /tmp/go.tgz
+
+# Indtall patched git and libgit2
+RUN yum -y remove git
+RUN yum -y install --nobest --allowerasing git-core-2.32.0-335.bb.el7 git-core-doc-2.32.0-335.bb.el7
+RUN yum -y install libgit2-0.28.2-7.el7 libgit2-debuginfo-0.28.2-7.el7
+
+RUN cargo install --root /usr/local ripgrep zoxide
+
+RUN echo kernel.perf_event_paranoid = -1 >> /etc/sysctl.conf
+
+# The final phase mostly has user runtime environment configurations
+FROM extras as final
+
+ARG HOME
+ARG USER
+
+ENV LC_ALL=C.UTF-8
+
+# Customize bash
+COPY --chown=$USER:staff bashrc /etc/bashrc.default
+RUN git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf && . /etc/bashrc.default && ~/.fzf/install --bin
+
+RUN chown $USER:staff /Users
+
+USER $USER
+
+# Create a folder to store emacs server file
+RUN mkdir -m 700 /tmp/local
+ENV EPHEMERAL=/tmp/local
+
+# Start emacs in daemon mode for quick editing
+# RUN echo #!/bin/bash > ${EPHEMERAL}/.entrypoint
+RUN echo nohup emacs --daemon \& > ${EPHEMERAL}/.entrypoint
+RUN chmod +x ${EPHEMERAL}/.entrypoint
+ENTRYPOINT ${EPHEMERAL}/.entrypoint > /dev/null 2>&1 && $SHELL
+
+WORKDIR $HOME

@@ -3,9 +3,12 @@
 USER := $(shell whoami)
 PASSWD ?= "nopass"
 HOME := $(shell realpath ~)
-FLAVOR := Dockerfile.centos
+FLAVOR := Dockerfile.rockylinux
 
 all: refresh build
+
+rockylinux: FLAVOR=Dockerfile.rockylinux
+rockylinux: all
 
 centos: FLAVOR=Dockerfile.centos
 centos: all
