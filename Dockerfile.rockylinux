@@ -13,8 +13,10 @@ RUN yum -y install epel-release
 
 RUN yum -y group install 'Development Tools'
 RUN yum -y install \
-        sudo zsh perf file emacs python2 rustc cargo \
+        sudo zsh perf file emacs python2 \
         gdb strace man-pages man-db cmake
+
+RUN ln /usr/bin/python2 /usr/bin/python
 
 COPY bb-artifactory.repo /etc/yum.repos.d/artifactory.repo
 
@@ -29,18 +31,22 @@ FROM base as extras
 ARG HOME
 ARG USER
 
+ENV RUSTUP_HOME=/opt/rust
+ENV CARGO_HOME=${RUSTUP_HOME}/cargo
+
 # For python
 RUN pip2 install virtualenv
 
 # Install Go
-RUN curl -sSL https://golang.org/dl/go1.16.7.linux-amd64.tar.gz -o /tmp/go.tgz && tar -C / -xf /tmp/go.tgz && rm -f /tmp/go.tgz
+RUN curl -sSL https://golang.org/dl/go1.17.linux-amd64.tar.gz -o /tmp/go.tgz && tar -C / -xf /tmp/go.tgz && rm -f /tmp/go.tgz
 
 # Indtall patched git and libgit2
 RUN yum -y remove git
 RUN yum -y install --nobest --allowerasing git-core-2.32.0-335.bb.el7 git-core-doc-2.32.0-335.bb.el7
 RUN yum -y install libgit2-0.28.2-7.el7 libgit2-debuginfo-0.28.2-7.el7
 
-RUN cargo install --root /usr/local ripgrep zoxide
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+RUN source ${CARGO_HOME}/env && cargo install ripgrep zoxide
 
 RUN echo kernel.perf_event_paranoid = -1 >> /etc/sysctl.conf
 

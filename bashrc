@@ -9,6 +9,7 @@ alias cdgo='pushd ${GOPATH:-"."}'
 alias em="emacsclient -q -a emacs -t -f ${EPHEMERAL}/server/emacs.server"
 alias venv='python3 -m venv'
 
+source ${CARGO_HOME}/env
 PATH=${HOME}/installs/${OS}/bin:/go/bin:${PATH}
 
 # Check if we have neovim installed

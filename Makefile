@@ -29,7 +29,7 @@ linux.latest: SOURCE=$(word 2, $(shell grep -m 1 -E "^FROM" ${FLAVOR}))
 linux.latest: bashrc Makefile ${FLAVOR}
 	@echo Building linux stage ${STAGE} based on ${SOURCE}
 	@docker pull ${SOURCE}
-	@docker build -q -f ${FLAVOR} --build-arg HOME=${HOME} --build-arg USER=${USER} --build-arg PASSWD=${PASSWD} --tag=linux:${STAGE} --rm=false .
+	@docker build --progress=plain -f ${FLAVOR} --build-arg HOME=${HOME} --build-arg USER=${USER} --build-arg PASSWD=${PASSWD} --tag=linux:${STAGE} --rm=false .
 	@touch linux.latest
 
 run: linux.latest
