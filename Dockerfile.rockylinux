@@ -2,9 +2,9 @@
 FROM rockylinux/rockylinux:8 as base
 
 ARG HOME
-ARG SHELL=/usr/bin/zsh
 ARG USER
 ARG PASSWD
+ARG SHELL=/usr/bin/zsh
 
 ENV SHELL=$SHELL
 
@@ -13,7 +13,7 @@ RUN yum -y install epel-release
 
 RUN yum -y group install 'Development Tools'
 RUN yum -y install \
-        sudo zsh perf file emacs python2 \
+        sudo zsh perf file python2 \
         gdb strace man-pages man-db cmake
 
 RUN ln /usr/bin/python2 /usr/bin/python
@@ -25,14 +25,13 @@ RUN groupadd staff
 RUN useradd -N -G wheel,staff -g staff -M -d $HOME -s $SHELL -o -u 501 $USER
 RUN echo "${USER}:${PASSWD}" | chpasswd
 
-# Add any development specific additional packages
-FROM base as extras
-
-ARG HOME
-ARG USER
+# Add 3rd party base - go, rust, nvim
+FROM base as base_plus
 
 ENV RUSTUP_HOME=/opt/rust
 ENV CARGO_HOME=${RUSTUP_HOME}/cargo
+
+RUN echo kernel.perf_event_paranoid = -1 >> /etc/sysctl.conf
 
 # For python
 RUN pip2 install virtualenv
@@ -45,10 +44,16 @@ RUN yum -y remove git
 RUN yum -y install --nobest --allowerasing git-core-2.32.0-335.bb.el7 git-core-doc-2.32.0-335.bb.el7
 RUN yum -y install libgit2-0.28.2-7.el7 libgit2-debuginfo-0.28.2-7.el7
 
+# Install rust
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-RUN source ${CARGO_HOME}/env && cargo install ripgrep zoxide
 
-RUN echo kernel.perf_event_paranoid = -1 >> /etc/sysctl.conf
+# Add any development specific additional packages or tools
+FROM base_plus as extras
+
+# Install nvim
+RUN cd /usr && curl -sL https://github.com/neovim/neovim/releases/download/v0.5.0/nvim-linux64.tar.gz | tar --strip-components=1 -zxf -
+
+RUN source ${CARGO_HOME}/env && cargo install ripgrep zoxide
 
 # The final phase mostly has user runtime environment configurations
 FROM extras as final
@@ -70,10 +75,5 @@ USER $USER
 RUN mkdir -m 700 /tmp/local
 ENV EPHEMERAL=/tmp/local
 
-# Start emacs in daemon mode for quick editing
-# RUN echo #!/bin/bash > ${EPHEMERAL}/.entrypoint
-RUN echo nohup emacs --daemon \& > ${EPHEMERAL}/.entrypoint
-RUN chmod +x ${EPHEMERAL}/.entrypoint
-ENTRYPOINT ${EPHEMERAL}/.entrypoint > /dev/null 2>&1 && $SHELL
-
 WORKDIR $HOME
+ENTRYPOINT $SHELL
