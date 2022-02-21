@@ -1,10 +1,11 @@
 # vim:expandtab
-FROM rockylinux/rockylinux:8 as base
+FROM rockylinux/rockylinux:8 as upstream
 
 ARG HOME
 ARG USER
 ARG PASSWD
 ARG SHELL=/usr/bin/zsh
+ARG GIT_VERSION=2.35.1-349
 
 ENV SHELL=$SHELL
 
@@ -17,6 +18,12 @@ RUN yum -y install \
         gdb strace man-pages man-db cmake
 
 RUN ln /usr/bin/python2 /usr/bin/python
+
+# Update packages from upstream and create up-to-date base
+FROM upstream as base
+
+RUN yum -y update
+RUN yum -y upgrade --allowerasing
 
 COPY bb-artifactory.repo /etc/yum.repos.d/artifactory.repo
 
@@ -41,7 +48,7 @@ RUN curl -sSL https://golang.org/dl/go1.17.linux-amd64.tar.gz -o /tmp/go.tgz && 
 
 # Indtall patched git and libgit2
 RUN yum -y remove git
-RUN yum -y install --nobest --allowerasing git-core-2.32.0-335.bb.el7 git-core-doc-2.32.0-335.bb.el7
+RUN yum -y install --nobest --allowerasing git-core-${GIT_VERSION}.bb.el7 git-core-doc-${GIT_VERSION}.bb.el7
 RUN yum -y install libgit2-0.28.2-7.el7 libgit2-debuginfo-0.28.2-7.el7
 
 # Install rust
@@ -51,7 +58,7 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 FROM base_plus as extras
 
 # Install nvim
-RUN cd /usr && curl -sL https://github.com/neovim/neovim/releases/download/v0.5.0/nvim-linux64.tar.gz | tar --strip-components=1 -zxf -
+RUN cd /usr && curl -sL https://github.com/neovim/neovim/releases/download/nightly/nvim-linux64.tar.gz | tar --strip-components=1 -zxf -
 
 RUN source ${CARGO_HOME}/env && cargo install ripgrep zoxide
 
